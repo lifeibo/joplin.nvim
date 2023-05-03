@@ -3,10 +3,10 @@ if exists('g:joplin_loaded')
 endif
 let g:joplin_loaded = 1
 
-if v:version < 802
-  echom 'Joplin needs vim 8.2+'
-  finish
-endif
+" if v:version < 802
+"   echom 'Joplin needs vim 8.2+'
+"   finish
+" endif
 
 if !has('python3')
   echom 'Joplin needs vim support python3, see :help python3'

@@ -27,20 +27,24 @@ props = {
     'joplin_popup_guide': 'Comment',
 }
 
+"""
 for name, highlight in props.items():
-    vim.Function('prop_type_add')(name, {'highlight': highlight})
+    vim.call('prop_type_add', name, {'highlight': highlight})
+"""
 
 
 def prop_add(nr, prop_type, col_begin=1, col_end=0):
     if prop_type == '':
         return
-    vim.Function('cursor')(nr, 1)
+    vim.call('cursor', nr, 1)
     if col_end == 0:
-        col_end = vim.Function('col')('$')
-    vim.Function('prop_add')(nr, col_begin, {
+        col_end = vim.call('col', '$')
+    """
+    vim.call('prop_add', nr, col_begin, {
         'end_col': col_end,
         'type': prop_type,
     })
+    """
 
 
 class Win(object):
@@ -74,7 +78,7 @@ class Win(object):
         """open joplin window
         """
         bufname_ = bufname()
-        winnr = vim.Function('bufwinnr')(bufname_)
+        winnr = vim.call('bufwinnr', bufname_)
         if winnr != -1:
             vim.command('%dwincmd w' % winnr)
             return
@@ -85,22 +89,22 @@ class Win(object):
         self._render()
         last_line = vim.current.buffer.vars.get('saved_last_line',
                                                 len(variable.window_title) + 1)
-        vim.Function('cursor')(last_line, 1)
+        vim.call('cursor', last_line, 1)
 
     def close(self):
         bufname_ = bufname()
-        winnr = vim.Function('bufwinnr')(bufname_)
+        winnr = vim.call('bufwinnr', bufname_)
         if winnr > 0:
             vim.command('%dclose' % winnr)
 
     def toggle(self):
-        if vim.Function('bufwinnr')(bufname()) > 0:
+        if vim.call('bufwinnr', bufname()) > 0:
             self.close()
         else:
             self.open()
 
     def write(self):
-        note_id = vim.current.buffer.vars.get('joplin_note_id', b'').decode()
+        note_id = vim.current.buffer.vars.get('joplin_note_id', b'')# .decode()
         if note_id == '':
             return
 
@@ -122,7 +126,7 @@ class Win(object):
             vim.command('echo "Joplin: %s"' % prompt)
             select = 0
             while True:
-                select = vim.Function('getchar')()
+                select = vim.call('getchar')
                 if select in [68, 100, 13, 27]:
                     # D, d, <cr>, <esc>
                     self._diff(note)
@@ -141,7 +145,7 @@ class Win(object):
             diffnr = vim.current.buffer.vars.get('diffnr', [])
             prog = re.compile(note.title + r'\.remote\.\d*\.md')
             for bufnr in diffnr:
-                bufname = vim.Function('bufname')(bufnr).decode()
+                bufname = vim.call('bufname', bufnr).decode()
                 basename = os.path.basename(bufname)
                 if prog.match(basename):
                     vim.command('%dbdelete!' % bufnr)
@@ -152,7 +156,7 @@ class Win(object):
         vim.command('set nomodified')
 
     def leave(self):
-        note_id = vim.current.buffer.vars.get('joplin_note_id', b'').decode()
+        note_id = vim.current.buffer.vars.get('joplin_note_id', b'')# .decode()
         if note_id != '':
             self._save_pos(note_id)
 
@@ -174,7 +178,7 @@ class Win(object):
             vim.command('echo "Joplin: note should copy to a notebook"')
             return
 
-        new_title = vim.Function('expand')('%:p:t').decode()
+        new_title = vim.call('expand', '%:p:t').decode()
         note = NoteNode()
         body = '\n'.join(vim.current.buffer[:])
         note.parent_id = parent.node.id
@@ -200,7 +204,7 @@ class Win(object):
         vim.command('only')
         vim.current.buffer.vars['joplin_diff'] = True
         vim.command('diffsplit %s' % newfile)
-        bufnr = vim.Function('bufnr')()
+        bufnr = vim.call('bufnr')
         vim.command('autocmd BufWinLeave <buffer> python3 '
                     'pyjoplin.win.diffleave("%s")' % note.id)
         vim.command('wincmd w')
@@ -219,9 +223,9 @@ class Win(object):
             elif re.match(r'^# .*~$', text):
                 prop_add(nr + 1, 'joplin_help_title', 3)
             elif re.match(r'^# [^:]*:.*$', text):
-                vim.Function('cursor')(nr + 1, 1)
+                vim.call('cursor', nr + 1, 1)
                 vim.command('noautocmd normal f:')
-                col = vim.Function('col')('.')
+                col = vim.call('col', '.')
                 prop_add(nr + 1, 'joplin_help_keyword', 3, col)
                 prop_add(nr + 1, 'joplin_help_summary', col)
             nr += 1
@@ -253,8 +257,8 @@ class Win(object):
         return nr
 
     def _render(self):
-        winnr_saved = vim.Function('winnr')()
-        winnr = vim.Function('bufwinnr')(bufname())
+        winnr_saved = vim.call('winnr')
+        winnr = vim.call('bufwinnr', bufname())
         if winnr < 0:
             return
         vim.command('%dwincmd w' % winnr)
@@ -272,8 +276,8 @@ class Win(object):
 
     def _save_pos(self, id):
         path = os.path.join(self._info_dir, id)
-        winid = vim.Function('bufwinid')('%')
-        wininfo = vim.Function('getwininfo')(winid)
+        winid = vim.call('bufwinid', '%')
+        wininfo = vim.call('getwininfo', winid)
         if len(wininfo) == 0:
             return
         last_cursor = wininfo[0].get('variables',
@@ -307,20 +311,20 @@ class Win(object):
                 vim.command('normal! %dzt' % topline)
                 vim.options['scrolloff'] = scrolloff_saved
 
-                vim.Function('cursor')(lnum, col)
+                vim.call('cursor', lnum, col)
         except Exception:
             pass
 
     def _edit_note(self, command, reopen_tree, note, joplin_treenode_line):
         lazyredraw_saved = vim.options['lazyredraw']
-        winview_saved = vim.Function('winsaveview')()
+        winview_saved = vim.call('winsaveview')
         undolevel_saved = vim.options['undolevels']
         vim.options['undolevels'] = -1
         dirname = os.path.join(self._basedir, note.id)
         filename = note.title + '.md'
         filename = filename.replace('/', '-')
         filename = os.path.join(dirname, filename)
-        filename = vim.Function('fnameescape')(filename).decode()
+        filename = vim.call('fnameescape', filename)# .decode()
         try:
             os.mkdir(dirname)
         except FileExistsError:
@@ -349,12 +353,12 @@ class Win(object):
         if reopen_tree:
             # check joplin window
             # reopen if not exist
-            winnr = vim.Function('bufwinnr')(bufname())
+            winnr = vim.call('bufwinnr', bufname())
             if winnr < 0:
-                note_bufname = vim.Function('bufname')()
+                note_bufname = vim.call('bufname')
                 self.open()
-                vim.Function('winrestview')(winview_saved)
-                winnr = vim.Function('bufwinnr')(note_bufname)
+                vim.call('winrestview', winview_saved)
+                winnr = vim.call('bufwinnr', note_bufname)
                 vim.command('%dwincmd w' % winnr)
 
         self._set_pos(note.id)
@@ -463,7 +467,7 @@ class Win(object):
                               options.note_order_desc)
             saved_pos = vim.eval('getcurpos()')
             self._render()
-            vim.Function('setpos')('.', saved_pos)
+            vim.call('setpos', '.', saved_pos)
         else:
             go_to_previous_win()
             self.edit('edit', treenode)
@@ -641,7 +645,7 @@ class Win(object):
     def cmd_question_mark(self):
         self._has_help = not self._has_help
         self._render()
-        vim.Function('cursor')(1, 1)
+        vim.call('cursor', 1, 1)
 
     def cmd_ab(self):
         self.cmd_a('Add notebook to path: ', True, 0)
@@ -683,15 +687,15 @@ class Win(object):
                 parent_id=parent.node.id, title=new_name, is_todo=is_todo)
         node = self._joplin.post(new_node)
         if node is not None:
-            line = vim.Function('line')('.')
+            line = vim.call('line', '.')
             self._refresh_render(parent)
-            vim.Function('cursor')(line, 1)
+            vim.call('cursor', line, 1)
 
     def cmd_rn(self, treenode):
         if treenode is None:
             return
         prompt = 'Rename %s to: ' % treenode.node.title
-        new_name = vim.Function('input')(prompt, treenode.node.title).decode()
+        new_name = vim.call('input', prompt, treenode.node.title).decode()
         if new_name == treenode.node.title or new_name == '':
             return
         node = self._joplin.get(FolderNode, treenode.node.id) \
@@ -732,11 +736,11 @@ class Win(object):
         node.parent_id = parent.node.id
         node = self._joplin.put(node)
         if node is not None:
-            line = vim.Function('line')('.')
+            line = vim.call('line', '.')
             self._refresh(origin_parent)
             self._refresh(parent)
             self._render()
-            vim.Function('cursor')(line, 1)
+            vim.call('cursor', line, 1)
 
     def cmd_cp(self, treenode):
         if treenode is None:
@@ -771,9 +775,9 @@ class Win(object):
         new_note.parent_id = parent.node.id
         node = self._joplin.post(new_note)
         if node is not None:
-            line = vim.Function('line')('.')
+            line = vim.call('line', '.')
             self._refresh_render(parent)
-            vim.Function('cursor')(line, 1)
+            vim.call('cursor', line, 1)
 
     def cmd_dd(self, treenode):
         if treenode is None:
@@ -792,17 +796,17 @@ class Win(object):
         select = 0
         # 89 == Y, 121 == y, 78 == N, 110 == n, 27 == <esc>, 13 == <cr>
         while True:
-            select = vim.Function('getchar')()
+            select = vim.call('getchar')
             if select in [89, 121]:
                 parent = treenode.parent
                 self._joplin.delete(cls, treenode.node.id)
                 vim.command('redraw!')
                 vim.command('echo "Joplin: <%s> deleted"' %
                             treenode.node.title)
-                line = vim.Function('line')('.')
+                line = vim.call('line', '.')
                 self._refresh_render(parent)
 
-                vim.Function('cursor')(line, 1)
+                vim.call('cursor', line, 1)
                 break
             elif select in [78, 110, 27, 13]:
                 vim.command('redraw!')
@@ -810,7 +814,7 @@ class Win(object):
                 break
 
     def vmap_cc(self):
-        getpos = vim.Function('getpos')
+        getpos = vim.call('getpos')
         _, start, _, _ = getpos("'<")
         _, end, _, _ = getpos("'>")
         parents = set()
@@ -826,10 +830,10 @@ class Win(object):
                 self._refresh(parent)
 
             self._render()
-            vim.Function('cursor')(start, 1)
+            vim.call('cursor', start, 1)
 
     def vmap_ct(self):
-        getpos = vim.Function('getpos')
+        getpos = vim.call('getpos')
         _, start, _, _ = getpos("'<")
         _, end, _, _ = getpos("'>")
         parents = set()
@@ -845,10 +849,10 @@ class Win(object):
                 self._refresh(parent)
 
             self._render()
-            vim.Function('cursor')(start, 1)
+            vim.call('cursor', start, 1)
 
     def vmap_dd(self):
-        getpos = vim.Function('getpos')
+        getpos = vim.call('getpos')
         _, start, _, _ = getpos("'<")
         _, end, _, _ = getpos("'>")
         nodes = list(
@@ -876,7 +880,7 @@ class Win(object):
             # 65 == A, 97 == a
             while True:
                 if not is_all:
-                    select = vim.Function('getchar')()
+                    select = vim.call('getchar')
                 if select in [89, 121, 65, 97]:
                     parents.add(node.parent)
                     cls = FolderNode if node.is_folder() else NoteNode
@@ -888,19 +892,19 @@ class Win(object):
                     vim.command('echo "Joplin: delete aborted"')
                     break
 
-        line = vim.Function('line')('.')
+        line = vim.call('line', '.')
         for parent in parents:
             self._refresh(parent)
 
         self._render()
         vim.command('redraw!')
-        vim.Function('cursor')(line, 1)
+        vim.call('cursor', line, 1)
 
     def vmap_mv(self):
-        getpos = vim.Function('getpos')
+        getpos = vim.call('getpos')
         _, start, _, _ = getpos("'<")
         _, end, _, _ = getpos("'>")
-        line = vim.Function('line')('.')
+        line = vim.call('line', '.')
         current_node = self._get_line_node(line)
         origin_parent = current_node.parent
         default_path = '' if origin_parent is None \
@@ -951,7 +955,7 @@ class Win(object):
         } for node in nodes])
 
         title = 'JoplinSearch "%s"' % query
-        result = vim.Function('setqflist')(
+        result = vim.call('setqflist',
             [], 'r', {
                 'title': title,
                 'items': items,
@@ -967,24 +971,24 @@ class Win(object):
                         'pyjoplin.win.edit_cur_search("%s")<cr>' % query)
 
     def edit_cur_search(self, last_query):
-        line = vim.Function('line')('.')
-        content = vim.Function('getline')(line).decode()
+        line = vim.call('line', '.')
+        content = vim.call('getline', line).decode()
         items = content.split('|')
         if len(items) < 2:
             return
         id = items[-1].strip()
         note = self._joplin.get(NoteNode, id)
-        curbufnr = vim.Function('bufnr')('%')
-        treebufnr = vim.Function('bufnr')(bufname())
-        buflist = vim.Function('tabpagebuflist')()
+        curbufnr = vim.call('bufnr', '%')
+        treebufnr = vim.call('bufnr', bufname())
+        buflist = vim.call('tabpagebuflist')
         buflist = list(
             filter(lambda nr: nr not in [curbufnr, treebufnr], buflist))
         bufnr = buflist[0] if len(buflist) > 0 else treebufnr
         reopen = bufnr == treebufnr
-        winnr = vim.Function('bufwinnr')(bufnr)
+        winnr = vim.call('bufwinnr', bufnr)
         vim.command('%dwincmd w' % winnr)
         self._edit_note('edit', reopen, note, 0)
-        vim.Function('setqflist')([], 'a', {'idx': line})
+        vim.call('setqflist', [], 'a', {'idx': line})
         if self._last_query != '':
             vim.command('/%s' % self._last_query)
 
@@ -1029,7 +1033,7 @@ class Win(object):
             }]
         })
 
-        vim.Function('popup_dialog')(text, {
+        vim.call('popup_dialog', text, {
             'title': title,
             'filter': 'joplin#popup#info_filter',
             'highlight': 'JoplinInfoWin',
@@ -1131,10 +1135,10 @@ class Win(object):
         return find_treenode(self._root, lineno)
 
     def _refresh_treenode_line(self, line):
-        winnr = vim.Function('bufwinnr')(bufname())
+        winnr = vim.call('bufwinnr', bufname())
         if winnr <= 0:
             return
-        winnr_saved = vim.Function('winnr')()
+        winnr_saved = vim.call('winnr')
         lazyredraw_saved = vim.options['lazyredraw']
         vim.options['lazyredraw'] = True
         vim.command('%dwincmd w' % winnr)
@@ -1142,7 +1146,7 @@ class Win(object):
         if treenode is not None and not treenode.is_folder():
             treenode = treenode.parent
         self._refresh_render(treenode)
-        vim.Function('cursor')(line, 1)
+        vim.call('cursor', line, 1)
         vim.command('%dwincmd w' % winnr_saved)
         vim.command('redraw!')
         vim.options['lazyredraw'] = lazyredraw_saved
@@ -1205,7 +1209,7 @@ def set_options():
     vim.current.buffer.options['textwidth'] = 0
     vim.current.window.options['signcolumn'] = 'no'
     vim.current.window.options['winfixwidth'] = True
-    vim.current.window.options['foldcolumn'] = 0
+    vim.current.window.options['foldcolumn'] = '0'
     vim.current.window.options['foldmethod'] = 'manual'
     vim.current.window.options['foldenable'] = False
     vim.current.window.options['list'] = False
@@ -1248,7 +1252,7 @@ def tree_line(node, indent):
 def note_map_command(lhs, command):
     if lhs == '':
         return
-    origin = vim.Function('maparg')(lhs, 'n').decode()
+    origin = vim.call('maparg', lhs, 'n').decode()
     if origin != '':
         return
     vim.command('nnoremap <buffer>%s <esc>:<c-u>%s' % (lhs, command))
@@ -1333,7 +1337,7 @@ def find_treenode(root, lineno):
 
 def cursor(treenode):
     if treenode.lineno > 0:
-        vim.Function('cursor')(treenode.lineno, 1)
+        vim.call('cursor', treenode.lineno, 1)
 
 
 def go_to_previous_win():
@@ -1355,7 +1359,7 @@ def input_path(prompt, default_path):
         vim.options['cmdheight'] = 2
     vim.command('redraw!')
     vim.command('echo " "')
-    path = vim.Function('input')(prompt, default_path,
+    path = vim.call('input', prompt, default_path,
                                  'custom,joplin#complete#folder').decode()
     path = path.strip()
     vim.command('redraw!')
