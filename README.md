@@ -1,3 +1,5 @@
+STILL UNDER DEVELOPMENT
+
 # joplin.vim
 This is a plugin for us to use [joplin.app](https://joplinapp.org/) in vim.  
 
