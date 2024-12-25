@@ -66,7 +66,7 @@ class Win(object):
     def init(self):
         if self._inited:
             return
-        self._joplin = joplin.Joplin(options.token, options.host, options.port)
+        self._joplin = joplin.Joplin(options.token, options.url)
         if not self._joplin.ping():
             return
         self._root = tree.construct_root(self._joplin, options.folder_order_by,

@@ -4,8 +4,7 @@
 import vim
 
 token = vim.vars.get('joplin_token', b'')
-host = vim.vars.get('joplin_host', b'127.0.0.1').decode()
-port = vim.vars.get('joplin_port', 41184)
+url = vim.vars.get('joplin_url', b'http://127.0.0.1:41184')
 window_width = vim.vars.get('joplin_window_width', 30)
 icon_open = vim.vars.get('joplin_icon_open', b'-').decode()
 icon_close = vim.vars.get('joplin_icon_close', b'+').decode()

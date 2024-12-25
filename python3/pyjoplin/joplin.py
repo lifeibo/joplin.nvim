@@ -9,11 +9,9 @@ from .node import FolderNode, NoteNode, ResourceNode, TagNode, factory_node
 
 class Joplin(object):
     """Joplin operation"""
-    def __init__(self, token, host='127.0.0.1', port=41184):
+    def __init__(self, token, url):
         self.token = token
-        self.host = host
-        self.port = port
-        self.base_url = 'http://%s:%d' % (host, port)
+        self.base_url = url
 
     def ping(self):
         """Testing if the service is available
